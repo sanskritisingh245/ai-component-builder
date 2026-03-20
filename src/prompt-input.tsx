@@ -92,7 +92,7 @@ export const  Sidebar=({
                     <button
                         type="submit"
                         disabled={!input.trim()|| isLoading}
-                        className="w-full py-2.5 text-sm font-medium text-white bg-linear-to-r from bg-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        className="w-full py-2.5 text-sm font-medium text-white  rounded-lg bg-linear-to-r from bg-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all "
                     >
                         {isLoading ?(
                             <span>
@@ -108,13 +108,13 @@ export const  Sidebar=({
 
             <div>
                 <p className="text-xs text-gray-500 mb-2">Try an example</p>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5 py-2.5 px-2.5">
                     {EXAMPLE_PROMPTS.map((prompt)=>(
                         <button
                             key={prompt}
                             onClick={()=>handleChipClick(prompt)}
                             disabled={isLoading}
-                            className="text-left text-xs px-3 py-2 bg-gray-400 rounded-lg border border-gray-800 hover:border-gray-700 hover:text-gray-200 disabled:opacity-50 transition-colors "
+                            className="text-left text-xs px-3 py-2 bg-gray-700  border border-gray-800 rounded-lg hover:border-gray-700 hover:text-gray-200 disabled:opacity-50 transition-colors "
                         >
                             {prompt}
                         </button>
