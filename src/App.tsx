@@ -5,10 +5,11 @@
 //import './App.css'
 
 import { useCallback, useState } from "react";
-import { VarientSidebar } from "./gallery";
+//import { VarientSidebar } from "./gallery";
 import { PreviewPanel } from "./preview-panel";
 import { Sidebar } from "./prompt-input";
 import { type GalleryState, type GenerationState } from "./type";
+import OpenAI from "openai";
 
 const cleanGenerateCode=(raw:string):string =>{
   let code=raw.trim();
@@ -41,11 +42,11 @@ export const App = () => {
     setGenerationState({status:'loading'});
     try{
       const openai= new OpenAI({
-        apikey,
+        apiKey:apikey,
        dangerouslyAllowBrowser: true,
       });
 
-      const response=await openai.chat.completions.create({
+      const response= await openai.chat.completions.create({
         model:'gpt-4o',
         messages:[
           {
@@ -67,6 +68,7 @@ export const App = () => {
       }
       setGenerationState({status:'success', code, prompt});
     }catch(err){
+      console.error("FULL ERROR:", err);
       const message= err instanceof Error? err.message:'Generation failed ';
       setGenerationState({status:'error', message})
     }
@@ -80,7 +82,12 @@ export const App = () => {
           apiKey={apikey}
           onApiKeySave={setApikey}
         />
-        <div className="flex-1 flex items-center justify-center p-8">
+        <PreviewPanel
+              state={generationState}
+              onSave={()=>console.log('save-coming in class-5')}
+              isSaving={false}
+        />
+        {/* <div className="flex-1 flex items-center justify-center p-8">
           {generationState.status==='idle' &&(
             <p className="text-gray-500">Describe a component to genrate code </p>
           )}
@@ -104,7 +111,7 @@ export const App = () => {
               </pre>
             </div>
           )}
-        </div>
+        </div> */}
         <aside className="w-52 bg-gray-900 border-l border-gray-800 flex items-center justify-center">
           <p className="tetx-xs text-gray-500">Gallery class</p>
         </aside>
