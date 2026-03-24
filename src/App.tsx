@@ -1,11 +1,6 @@
-// import { useState } from 'react'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from './assets/vite.svg'
-// import heroImg from './assets/hero.png'
-//import './App.css'
-
-import { useCallback, useState } from "react";
-//import { VarientSidebar } from "./gallery";
+import { useCallback, useEffect, useState } from "react";
+import { isFirebaseConfigured, saveComponent, listComponents } from './firebase';
+import { VarientSidebar } from "./gallery";
 import { PreviewPanel } from "./preview-panel";
 import { Sidebar } from "./prompt-input";
 import { type GalleryState, type GenerationState } from "./type";
@@ -34,9 +29,24 @@ const extractTitle =(prompt:string):string =>{
 export const App = () => {
   const[apikey, setApikey]=useState(()=>localStorage.getItem('openai_api_key')?? '');
   const[generationState, setGenerationState]=useState<GenerationState>({status:'idle'});
-  const[galleryState]=useState<GalleryState>({status:'idle'});
-  const [isSaving]=useState(false);
+  const[galleryState, setGalleryState]=useState<GalleryState>({status:'idle'});
+  const [isSaving, setIsSaving]=useState(false);
   
+  const fetchGallery = useCallback(async()=>{
+    if(!isFirebaseConfigured()) return;
+    setGalleryState({status:'loading'});
+    try{
+      const components= await listComponents();
+      setGalleryState({status:'success', components});
+    }catch(err){
+      const message=err instanceof Error? err.message:'Failed to load gallery';
+      setGalleryState({status:'error', message})
+    }
+  },[])
+  useEffect(()=>{
+    fetchGallery();
+  },[fetchGallery]);
+
   const handleGenerate = useCallback(async(prompt:string)=>{
     if(!apikey) return;
     setGenerationState({status:'loading'});
@@ -74,6 +84,21 @@ export const App = () => {
     }
   },[apikey]);
 
+  const handleSave = useCallback(async ()=>{
+    if(generationState.status==='success')return;
+    if(!isFirebaseConfigured()) return;
+    setIsSaving(true);
+    try{
+      const title = extractTitle(generationState.prompt);
+      await saveComponent(generationState.prompt , generationState.code, title);
+      await fetchGallery();
+    }catch(err){
+      console.error('failed to save component',err);
+    }finally{
+      setIsSaving(false);
+    }
+  },[generationState, fetchGallery])
+
   return (
     <div className="flex h-screen bg-gray-950 text-white overflow-hidden">
         <Sidebar
@@ -84,37 +109,10 @@ export const App = () => {
         />
         <PreviewPanel
               state={generationState}
-              onSave={()=>console.log('save-coming in class-5')}
+              onSave={handleSave}
               isSaving={false}
         />
-        {/* <div className="flex-1 flex items-center justify-center p-8">
-          {generationState.status==='idle' &&(
-            <p className="text-gray-500">Describe a component to genrate code </p>
-          )}
-
-          {generationState.status==='loading' &&(
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"/>
-              <p className="text-sm text-gray-400 ">Generating....</p>
-            </div>
-          )}
-
-          {generationState.status==='error' &&(
-            <p className="text-red-400">{generationState.message}</p>
-          )}
-
-          {generationState.status==='success' &&(
-            <div className="max-w-2xl w-full">
-              <p className="text-sm text-gray-400 mb-2">Generate code</p>
-              <pre className="bg-gray-900 p-4 rounded-lg text-sm tetx-green-400 overflow-auto max-h-96">
-                {generationState.code}
-              </pre>
-            </div>
-          )}
-        </div> */}
-        <aside className="w-52 bg-gray-900 border-l border-gray-800 flex items-center justify-center">
-          <p className="tetx-xs text-gray-500">Gallery class</p>
-        </aside>
+        <VarientSidebar state={galleryState} onRefresh={fetchGallery}/>
     </div>
   );
 };
