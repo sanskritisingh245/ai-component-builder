@@ -18,7 +18,7 @@ export const VarientSidebar =({state, onRefresh}:GalleryGridProps)=>{
             <div className='flex-1 overflow-y-auto p-2 space-y-2'>
                 {state.status==='idle' || state.status==='loading'?(
                     Array.from({length:3}).map((_,i)=>(
-                        <div key={i} className='aspect-[3/4] bg-gray-800 rounded-lg animate-pulse'/>
+                       <div key={i} className="aspect-[3/4] bg-gray-800 rounded-lg animate-pulse" />
                     ))
                 ):state.status==='error'?(
                     <div className='text-center py-4'>

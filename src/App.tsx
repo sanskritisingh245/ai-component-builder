@@ -27,7 +27,7 @@ const extractTitle =(prompt:string):string =>{
 };
 
 export const App = () => {
-  const[apikey, setApikey]=useState(()=>localStorage.getItem('openai_api_key')?? '');
+  const[apiKey, setApikey]=useState(()=>localStorage.getItem('openai_api_key')?? '');
   const[generationState, setGenerationState]=useState<GenerationState>({status:'idle'});
   const[galleryState, setGalleryState]=useState<GalleryState>({status:'idle'});
   const [isSaving, setIsSaving]=useState(false);
@@ -47,64 +47,61 @@ export const App = () => {
     fetchGallery();
   },[fetchGallery]);
 
-  const handleGenerate = useCallback(async(prompt:string)=>{
-    if(!apikey) return;
-    setGenerationState({status:'loading'});
-    try{
-      const openai= new OpenAI({
-        apiKey:apikey,
-       dangerouslyAllowBrowser: true,
+   const handleGenerate = useCallback(async (prompt: string) => {
+    if (!apiKey) return;
+    setGenerationState({ status: 'loading' });
+    try {
+      const openai = new OpenAI({
+        apiKey,
+        dangerouslyAllowBrowser: true,
       });
-
-      const response= await openai.chat.completions.create({
-        model:'gpt-4o',
-        messages:[
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
           {
-            role:'system',
+            role: 'system',
             content:
-              'Return only JSX for a single React component. No imports, no exports, no function wrapper, no explanations , no markdown code fences. Use only Tailwind CSS for styling. The JSX should be a single root element. Use  realistic placeholder content'
+              'Return only raw JSX for a single React component. No imports, no exports, no function wrapper, no explanations, no markdown code fences. Use only Tailwind CSS classes for styling. The JSX should be a single root element. Use realistic placeholder content.',
           },
-          {role:'user', content:prompt}
+          { role: 'user', content: prompt },
         ],
-        temperature:0.7,
-        max_tokens:2000,
+        temperature: 0.7,
+        max_tokens: 2000,
       });
       const raw = response.choices[0]?.message?.content ?? '';
-      const code=cleanGenerateCode(raw);
-
-      if(!code){
-        setGenerationState({status:'error', message:'No code was generated. Try a different prompt.'})
+      const code = cleanGenerateCode(raw);
+      if (!code) {
+        setGenerationState({ status: 'error', message: 'No code was generated. Try a different prompt.' });
         return;
       }
-      setGenerationState({status:'success', code, prompt});
-    }catch(err){
-      console.error("FULL ERROR:", err);
-      const message= err instanceof Error? err.message:'Generation failed ';
-      setGenerationState({status:'error', message})
+      setGenerationState({ status: 'success', code, prompt });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Generation failed';
+      setGenerationState({ status: 'error', message });
     }
-  },[apikey]);
+  }, [apiKey]);
 
-  const handleSave = useCallback(async ()=>{
-    if(generationState.status==='success')return;
-    if(!isFirebaseConfigured()) return;
+ const handleSave = useCallback(async () => {
+    if (generationState.status !== 'success') return;
+    if (!isFirebaseConfigured()) return;
     setIsSaving(true);
-    try{
+    try {
       const title = extractTitle(generationState.prompt);
-      await saveComponent(generationState.prompt , generationState.code, title);
+      await saveComponent(generationState.prompt, generationState.code, title);
       await fetchGallery();
-    }catch(err){
-      console.error('failed to save component',err);
-    }finally{
+    } catch (err) {
+      console.error('failed to save component:', err);
+    } finally {
       setIsSaving(false);
     }
-  },[generationState, fetchGallery])
+  }, [generationState, fetchGallery]);
 
   return (
     <div className="flex h-screen bg-gray-950 text-white overflow-hidden">
         <Sidebar
           onGenerate={handleGenerate}
           isLoading={generationState.status==='loading'}
-          apiKey={apikey}
+          apiKey={apiKey}
           onApiKeySave={setApikey}
         />
         <PreviewPanel
