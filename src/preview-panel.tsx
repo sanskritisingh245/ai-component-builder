@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { PreviewPanelProps } from "./type";
-
 import { WebPreview } from "./components/WebPreview";
 import { CopyButton } from "./components/CopyButton";
 import { CodeBlock } from "./components/CodeBlock";
