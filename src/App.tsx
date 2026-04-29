@@ -107,7 +107,7 @@ export const App = () => {
         <PreviewPanel
               state={generationState}
               onSave={handleSave}
-              isSaving={false}
+              isSaving={isSaving}
         />
         <VarientSidebar state={galleryState} onRefresh={fetchGallery}/>
     </div>
