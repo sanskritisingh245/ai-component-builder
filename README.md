@@ -2,6 +2,9 @@
 
 Generate React components from natural language prompts using OpenAI, preview them live, and save your favorites to a Firebase-backed gallery.
 
+
+https://github.com/user-attachments/assets/353ebd02-0994-4708-a9fa-686ab1dcc99f
+
 ## Features
 
 - **Prompt-to-component generation** — describe a UI in plain English and get back a styled React component.
