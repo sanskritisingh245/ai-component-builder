@@ -1,18 +1,26 @@
 import { useState, useCallback } from "react";
-export const CopyButton = ({ code }: { code: string }) => {
-  const [copied, setCopied] = useState(false);
+export const CopyButton = ({
+  code,
+  className = "text-xs font-medium px-3 py-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 hover:text-white hover:border-gray-600 transition-colors",
+}: {
+  code: string;
+  className?: string;
+}) => {
+  const [label, setLabel] = useState("Copy");
 
+  // navigator.clipboard is undefined on plain-http origins (e.g. testing on a phone via LAN IP)
   const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(code);
+      setLabel("Copied!");
+    } catch {
+      setLabel("Failed");
+    }
+    setTimeout(() => setLabel("Copy"), 2000);
   }, [code]);
   return (
-    <button
-      onClick={handleCopy}
-      className="text-xs px-3 py-3 bg-gray-500 text-gray-300 rounded-lg border border-gray-700 hover:text-white hover:border-gray-600 transition-colors"
-    >
-      {copied ? "copied!" : "Copy Code"}
+    <button onClick={handleCopy} className={className}>
+      {label}
     </button>
   );
 };

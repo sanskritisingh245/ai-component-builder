@@ -1,5 +1,5 @@
 export const IdlePlaceholder = () => (
-  <div className="text-center">
+  <div className="text-center px-4">
     <svg
       className="w-16 h-16 mx-auto mb-4 text-gray-700"
       fill="none"
@@ -13,9 +13,9 @@ export const IdlePlaceholder = () => (
         d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
       />
     </svg>
-    <p className="tetx-sm text-gray-500">
+    <p className="text-sm text-gray-400">
       Describe a component to see a live preview{" "}
     </p>
-    <p className="text-xs text-gray-600">Your generated UI will appear here </p>
+    <p className="text-xs text-gray-600 mt-1">Your generated UI will appear here </p>
   </div>
 );

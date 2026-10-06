@@ -39,4 +39,5 @@ export interface PreviewPanelProps {
 export interface GalleryGridProps {
   state: GalleryState;
   onRefresh: () => void;
+  onSelect: (component: ComponentDocument) => void;
 }

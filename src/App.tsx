@@ -12,13 +12,7 @@ const cleanGenerateCode=(raw:string):string =>{
   code=code.replace(/\n?```\s*$/i, '');
   code = code.replace(/^import\s+.*;\s*\n?/gm, '');
   code = code.replace(/^export\s+(default\s+)?/gm, '');
-
-  const fnMatch = code.match(/(?:function|const)\s+\w+\s*(?:=\s*)?(?:\([^)]*\)\s*(?:=>)?\s*)?[({]\s*\n?\s*return\s*\(\s*\n?([\s\S]*?)\n?\s*\)\s*;?\s*\n?\s*[})]\s*;?\s*$/);
-  if (fnMatch?.[1]) {
-    code = fnMatch[1].trim();
-  }
   return code.trim();
-
 };
 
 const extractTitle =(prompt:string):string =>{
@@ -26,11 +20,17 @@ const extractTitle =(prompt:string):string =>{
   return words.length>50 ?words.slice(0, 50)+'...':words;
 };
 
+type MobileView = 'create' | 'preview' | 'saved';
+
 export const App = () => {
   const[apiKey, setApikey]=useState(()=>localStorage.getItem('openai_api_key')?? '');
+  useEffect(()=>{ localStorage.setItem('openai_api_key', apiKey); },[apiKey]);
   const[generationState, setGenerationState]=useState<GenerationState>({status:'idle'});
   const[galleryState, setGalleryState]=useState<GalleryState>({status:'idle'});
   const [isSaving, setIsSaving]=useState(false);
+  // phones show one panel at a time; desktop shows all three
+  const [mobileView, setMobileView]=useState<MobileView>('create');
+  const show = (view: MobileView) => (mobileView === view ? 'contents' : 'hidden md:contents');
   
   const fetchGallery = useCallback(async()=>{
     if(!isFirebaseConfigured()) return;
@@ -48,7 +48,11 @@ export const App = () => {
   },[fetchGallery]);
 
    const handleGenerate = useCallback(async (prompt: string) => {
-    if (!apiKey) return;
+    setMobileView('preview');
+    if (!apiKey) {
+      setGenerationState({ status: 'error', message: 'Add your OpenAI API key first.' });
+      return;
+    }
     setGenerationState({ status: 'loading' });
     try {
       const openai = new OpenAI({
@@ -61,7 +65,7 @@ export const App = () => {
           {
             role: 'system',
             content:
-              'Return only raw JSX for a single React component. No imports, no exports, no function wrapper, no explanations, no markdown code fences. Use only Tailwind CSS classes for styling. The JSX should be a single root element. Use realistic placeholder content.',
+              'Return only the code for a single React function component named Component. React hooks (useState, useEffect, useRef, useMemo, useCallback) are available as globals, so do not import anything. No exports, no explanations, no markdown code fences. Use only Tailwind CSS classes for styling. Make interactive elements (toggles, tabs, inputs) actually work with state. Make the layout responsive. Use realistic placeholder content.',
           },
           { role: 'user', content: prompt },
         ],
@@ -90,26 +94,54 @@ export const App = () => {
       await saveComponent(generationState.prompt, generationState.code, title);
       await fetchGallery();
     } catch (err) {
-      console.error('failed to save component:', err);
+      alert(`Failed to save: ${err instanceof Error ? err.message : err}`);
     } finally {
       setIsSaving(false);
     }
   }, [generationState, fetchGallery]);
 
   return (
-    <div className="flex h-screen bg-gray-950 text-white overflow-hidden">
+    <div className="flex flex-col md:flex-row h-dvh bg-gray-950 text-white overflow-hidden">
+      <div className={show('create')}>
         <Sidebar
           onGenerate={handleGenerate}
           isLoading={generationState.status==='loading'}
           apiKey={apiKey}
-          onApiKeySave={setApikey}
+          onApiKeyChange={setApikey}
         />
+      </div>
+      <div className={show('preview')}>
         <PreviewPanel
               state={generationState}
               onSave={handleSave}
               isSaving={isSaving}
         />
-        <VarientSidebar state={galleryState} onRefresh={fetchGallery}/>
+      </div>
+      {isFirebaseConfigured() && (
+        <div className={show('saved')}>
+          <VarientSidebar
+            state={galleryState}
+            onRefresh={fetchGallery}
+            onSelect={(c)=>{
+              setGenerationState({status:'success', code:c.code, prompt:c.prompt});
+              setMobileView('preview');
+            }}
+          />
+        </div>
+      )}
+      <nav className="md:hidden shrink-0 flex border-t border-gray-800 bg-gray-900">
+        {(['create', 'preview', ...(isFirebaseConfigured() ? ['saved'] : [])] as MobileView[]).map((view)=>(
+          <button
+            key={view}
+            onClick={()=>setMobileView(view)}
+            className={`flex-1 py-3 text-xs font-medium capitalize transition-colors ${
+              mobileView===view ? 'text-violet-400' : 'text-gray-500'
+            }`}
+          >
+            {view}
+          </button>
+        ))}
+      </nav>
     </div>
   );
 };
